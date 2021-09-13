@@ -3,7 +3,6 @@ package com.example.queensquest2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,13 +21,15 @@ public class MainActivity extends AppCompatActivity {
     final int num_squares = 64;
     final int num_rows = 8;
     GridLayout chess_board;
-//    TextView game_status = findViewById(R.id.status);
+    TextView game_status;
+//    Toast toast = Toast.makeText( this  , "" , Toast.LENGTH_SHORT );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         chess_board = findViewById(R.id.chess_board);
+        game_status = findViewById(R.id.status);
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(dm);
         int board_width = dm.widthPixels;
@@ -103,26 +104,28 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 String newTag = blank + row + col;
+                queen_count--;
+                update_status_bar();
                 v.setTag(newTag);
-//            } else if (status.equals(blank)) {
-//                Log.v("button", "button" + v.getId() + "checking logic");
-//                if (logic(row, col)) {
-//                    Log.v("button", "button" + v.getId() + "was clicked.\nit was a blank.");
-//                v.setBackground(getResources().getDrawable(R.drawable.seeds));
-//                    v.setBackgroundColor(v.getContext().getResources().getColor(R.color.purple_500));
-//                    String newTag = queen + row + col;
-//                    v.setTag(newTag);
-//                    check_win_condition();
-//                } else {
-//                    Context context = getApplicationContext();
-//                    CharSequence text;
-//                    int duration = Toast.LENGTH_SHORT;
-//                    text = "Nope!";
-//                    Toast toast = Toast.makeText(context, text, duration);
-//                    toast.show();
-//                }
+            } else if (status.equals(blank)) {
+                Log.v("button", "button" + v.getId() + "checking logic");
+                if (logic(row, col)) {
+                    Log.v("button", "button" + v.getId() + "was clicked.\nit was a blank.");
+                    v.setBackgroundColor(v.getContext().getResources().getColor(R.color.purple_500));
+                    String newTag = queen + row + col;
+                    v.setTag(newTag);
+                    check_win_condition();
+                    update_status_bar();
+                } else {
+                    Context context = getApplicationContext();
+                    CharSequence text;
+                    int duration = Toast.LENGTH_SHORT;
+                    text = "Nope!";
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
+                }
             } else {
-                Log.v("button", "button" + v.getId() + "was clicked.\nstatus: " + status);
+                Log.v("button", "button" + v.getId() + " was clicked.\nstatus: " + status);
             }
         }
     };
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         }
         checkRow = row;
         checkCol = col;
-        while(checkCol >= 0 && checkRow < num_rows - 1) {
+        while(checkCol >= 1 && checkRow < num_rows - 1) {
             checkCol--;
             checkRow++;
             View child = chess_board.getChildAt((checkRow*num_rows) + checkCol); // check first
@@ -176,13 +179,13 @@ public class MainActivity extends AppCompatActivity {
         }
         checkRow = row;
         checkCol = col;
-        while(checkCol > num_rows - 1 && checkRow >= 0) {
+        while(checkCol < num_rows - 1 && checkRow >= 1) {
             checkCol++;
             checkRow--;
             View child = chess_board.getChildAt((checkRow*num_rows) + checkCol); // check first
             String tag = (String) child.getTag();
             String status = tag.substring(0,5);
-            if (status == queen) {
+            if (status.equals(queen)) {
                 return false;
             }
         }
@@ -212,23 +215,57 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-//    public void check_win_condition() {
-//        Context context = getApplicationContext();
-//        CharSequence text;
-//        int duration = Toast.LENGTH_SHORT;
-//        if (++queen_count == num_rows) {
-//            game_won = true;
-//            text = "you won!";
-//            Toast toast = Toast.makeText(context, text, duration);
-//            toast.show();
-//        } else {
-//            text = "good move!";
-//            Toast toast = Toast.makeText(context, text, duration);
-//            toast.show();
-//
-//            int queens_left = num_rows - queen_count;
-//            game_status.setText(queens_left + " Queens Left!");
-//        }
-//        Log.v("game", "game won");
-//    }
+    public void check_win_condition() {
+        Context context = getApplicationContext();
+        CharSequence text;
+        int duration = Toast.LENGTH_SHORT;
+        if (++queen_count == num_rows) {
+            game_won = true;
+            text = "you won!";
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+        } else {
+            make_toast("good move");
+        }
+        Log.v("game", "game won");
+    }
+
+    public void update_status_bar() {
+        int queens_left = num_rows - queen_count;
+        game_status.setText(queens_left + " Queens Left!");
+    }
+
+    public void reset(View v) {
+        game_won = false;
+        queen_count = 0;
+        update_status_bar();
+        for(int i=0; i<num_squares; i++) {
+            Button button = (Button) chess_board.getChildAt(i);
+            int rowIdx = i/num_rows;
+            int colIdx = i%num_rows;
+            String tag = blank + rowIdx + colIdx;
+            button.setTag(tag);
+            make_toast("Reset!");
+            if (rowIdx%2 == 0) {
+                if (i%2==0) {
+                    button.setBackgroundColor(button.getContext().getResources().getColor(R.color.red));
+                } else {
+                    button.setBackgroundColor(button.getContext().getResources().getColor(R.color.white));
+                }
+            } else {
+                if (i%2==1) {
+                    button.setBackgroundColor(button.getContext().getResources().getColor(R.color.red));
+                } else {
+                    button.setBackgroundColor(button.getContext().getResources().getColor(R.color.white));
+                }
+            }
+        }
+    }
+
+    public void make_toast(CharSequence text) {
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
 }
