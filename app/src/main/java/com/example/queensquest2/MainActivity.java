@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -245,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
             int colIdx = i%num_rows;
             String tag = blank + rowIdx + colIdx;
             button.setTag(tag);
-            make_toast("Reset!");
             if (rowIdx%2 == 0) {
                 if (i%2==0) {
                     button.setBackgroundColor(button.getContext().getResources().getColor(R.color.red));
@@ -260,12 +260,28 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        make_toast("Reset!");
     }
 
-    public void make_toast(CharSequence text) {
+    public void make_toast(CharSequence text) {  // timer idea from https://www.codeproject.com/Articles/988256/How-to-Show-a-Toast-for-a-Specific-Duration-in-And
+        int actual_toast_duration = 1000; // in millisecs, for use with countdown timer
+        CountDownTimer timer;
+        // making the toast
         Context context = getApplicationContext();
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
+        timer = new CountDownTimer(actual_toast_duration, 100) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                toast.show();
+            }
+
+            @Override
+            public void onFinish() {
+                toast.cancel();
+            }
+        };
         toast.show();
+        timer.start();
     }
 }
